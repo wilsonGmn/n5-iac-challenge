@@ -1,0 +1,56 @@
+
+kubeconfig.yaml
+notes.txt
+
+backend/.terraform.lock.hcl
+backend/.terraform.lock.hcl_bkp
+backend/.terraform/*
+backend/.terraform_bkp/*
+
+
+N5-iac-app/.terraform.lock.hcl
+N5-iac-app/.terraform.lock.hcl_bkp
+N5-iac-app/.terraform/*
+N5-iac-app/.terraform_bkp/*
+modules/key/*
+
+# Ignore /keys directory and all its contents
+/key/
+/key/*
+
+# Ignore .local directory in root and all its contents
+/.local/
+/.local/*
+
+# Ignore .local directory in any subdirectory and all its contents
+*/.local/
+*/.local/*
+
+# Local .terraform directories
+**/.terraform/*
+**./.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+
+# Terraform plan output
+*.tfplan
+
+# Ignore override files as they are usually used locally
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore CLI configuration files
+.terraformrc
+.terraform.rc
+
+# Ignore variables file with sensitive information (optional)
+# Uncomment if you have sensitive data stored in these files
+# terraform.tfvars
+# *.auto.tfvars

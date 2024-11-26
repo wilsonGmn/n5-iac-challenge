@@ -1,0 +1,66 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: never
+    - when: always
+
+variables:
+  TF_VAR_user: $GITLAB_USER_EMAIL
+  ALL_ENVS: dev
+
+stages:
+  - test
+  - plan
+  - apply
+
+.base:
+  image: 
+    name: hashicorp/terraform:1.9.2
+    entrypoint: [""]
+  variables:
+    TF_INIT_OPTS: ""
+    TF_VAR_prefix: ${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}
+    TF_VAR_default_region: $DEFAULT_REGION
+    TF_VAR_deployment_regions: $DEPLOYMENT_REGIONS
+    WORKSPACE: env-${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}
+  before_script:
+    - terraform init $TF_INIT_OPTS
+    - |
+      [[ $WORKSPACE != "" ]] && terraform workspace select -or-create $WORKSPACE
+    - echo "Workspace => $(terraform workspace show)"
+  tags:
+    - docker
+
+tf_validate:
+  stage: test
+  extends: .base
+  variables:
+    TF_VALIDATE_OPTS: ""
+  script:
+    - env
+    - for env in ${ALL_ENVS:-default}; do echo -n "validate $env  "; (TF_WORKSPACE=env-$env terraform validate $TF_VALIDATE_OPTS); done
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_TARGET_BRANCH_PROTECTED == 'true'
+    - if: $CI_PIPELINE_SOURCE == 'push' && ($CI_OPEN_MERGE_REQUESTS == null || $CI_COMMIT_REF_PROTECTED == 'true')
+
+tf_plan:
+  stage: plan
+  extends: .base
+  variables:
+    TF_PLAN_OPTS: ""
+  script:
+    - terraform plan $TF_PLAN_OPTS -out=plan.tf
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_TARGET_BRANCH_PROTECTED == 'true'
+
+tf_apply:
+  stage: apply
+  extends: .base
+  variables:
+    TF_APPLY_OPTS: ""
+  before_script:
+  script:
+    - terraform apply $TF_APPLY_OPTS -auto-approve
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && $CI_COOMIT_REF_PROTECTED == 'true' && $CI_MERGE_REQUEST_TARGET_BRANCH_PROTECTED == 'true'
+
