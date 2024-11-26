@@ -37,6 +37,8 @@ modules/key/*
 # Crash log files
 crash.log
 
+.terraform.lock.hcl
+
 # Terraform plan output
 *.tfplan
 
